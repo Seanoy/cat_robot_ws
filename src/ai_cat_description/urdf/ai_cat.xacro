@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ai_cat">
+
+  <!-- ====================== 参数定义 ====================== -->
+  <xacro:property name="PI" value="3.1415926535897931" />
+  <xacro:property name="body_length" value="0.40" />   <!-- 前后长 -->
+  <xacro:property name="body_width"  value="0.18" />
+  <xacro:property name="body_height" value="0.15" />
+
+  <xacro:property name="leg_upper_len" value="0.10" />
+  <xacro:property name="leg_lower_len" value="0.09" />
+
+  <xacro:property name="head_offset_x" value="0.22" />
+  <xacro:property name="tail_offset_x" value="-0.20" />
+
+  <!-- ====================== 材料 ====================== -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+      </geometry>
+      <material name="gray">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="2.5"/>
+      <inertia ixx="0.08" ixy="0.0" ixz="0.0" iyy="0.04" iyz="0.0" izz="0.09"/>
+    </inertial>
+  </link>
+
+  <!-- 前右腿 (right front) - 对称，y取负 -->
+<xacro:macro name="front_leg" params="side sign">
+    <!-- sign = 1 for left, -1 for right → 用于 y 方向镜像 -->
+
+    <joint name="${side}_shoulder_pitch" type="revolute">
+      <parent link="base_link"/>
+      <child  link="${side}_upper_leg"/>
+      <origin xyz="0.12 ${sign * 0.11} -0.04" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.57" upper="1.57" effort="20" velocity="3.0"/>
+    </joint>
+
+    <link name="${side}_upper_leg">
+      <visual>
+        <origin rpy="0 1.57 0"/>
+        <geometry><cylinder length="${leg_upper_len}" radius="0.022"/></geometry>
+        <material name="dark_gray"><color rgba="0.3 0.3 0.3 1"/></material>
+      </visual>
+      <collision>
+        <geometry><cylinder length="${leg_upper_len}" radius="0.022"/></geometry>
+      </collision>
+      <!-- 可选：添加 inertial -->
+      <inertial>
+        <mass value="0.25"/>
+        <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.0002"/>
+      </inertial>
+    </link>
+
+    <joint name="${side}_elbow_pitch" type="revolute">
+      <parent link="${side}_upper_leg"/>
+      <child  link="${side}_lower_leg"/>
+      <origin xyz="0 0 -${leg_upper_len}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.8" upper="0.8" effort="15" velocity="4.0"/>
+    </joint>
+
+    <link name="${side}_lower_leg">
+      <visual>
+        <origin rpy="0 1.57 0"/>
+        <geometry><cylinder length="${leg_lower_len}" radius="0.018"/></geometry>
+        <material name="dark_gray"/>
+      </visual>
+      <collision>
+        <geometry><cylinder length="${leg_lower_len}" radius="0.018"/></geometry>
+      </collision>
+      <inertial>
+        <mass value="0.18"/>
+        <inertia ixx="0.0006" ixy="0" ixz="0" iyy="0.0006" iyz="0" izz="0.0001"/>
+      </inertial>
+    </link>
+
+  </xacro:macro>
+
+  <!-- 实际调用：左腿 sign=1，右腿 sign=-1 -->
+  <xacro:front_leg side="lf" sign="1" />
+  <xacro:front_leg side="rf" sign="-1" />
+
+  <!-- ====================== 头部 ====================== -->
+  <joint name="neck_pitch" type="revolute">
+    <parent link="base_link"/>
+    <child  link="head_base"/>
+    <origin xyz="${head_offset_x} 0 0.08" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.8" upper="0.6" effort="10" velocity="2.5"/>
+  </joint>
+
+  <link name="head_base">
+    <visual>
+      <geometry><sphere radius="0.07"/></geometry>
+      <material name="light_gray"><color rgba="0.9 0.9 0.85 1"/></material>
+    </visual>
+  </link>
+
+  <joint name="neck_yaw" type="continuous">
+    <parent link="head_base"/>
+    <child  link="head"/>
+    <origin xyz="0 0 0.04" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="8" velocity="3.0"/>
+  </joint>
+
+  <link name="head">
+    <visual>
+      <geometry><sphere radius="0.065"/></geometry>
+      <material name="white"><color rgba="1 1 1 1"/></material>
+    </visual>
+  </link>
+
+  <!-- ====================== 尾巴 ====================== -->
+  <joint name="tail_base" type="revolute">
+    <parent link="base_link"/>
+    <child  link="tail"/>
+    <origin xyz="${tail_offset_x} 0 -0.02" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.2" upper="1.2" effort="5" velocity="5.0"/>
+  </joint>
+
+  <link name="tail">
+    <visual>
+      <origin xyz="0 0 -0.12"/>
+      <geometry><cylinder length="0.24" radius="0.012"/></geometry>
+      <material name="dark_gray"/>
+    </visual>
+  </link>
+
+</robot>

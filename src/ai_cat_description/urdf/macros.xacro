@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 常用颜色宏 -->
+  <xacro:macro name="color_material" params="name r g b a">
+    <material name="${name}">
+      <color rgba="${r} ${g} ${b} ${a}"/>
+    </material>
+  </xacro:macro>
+
+  <!-- 简单圆柱体 link 宏 -->
+  <xacro:macro name="cylinder_link" params="name length radius mass *origin material_name">
+    <link name="${name}">
+      <inertial>
+        <mass value="${mass}"/>
+        <inertia ixx="${mass*(3*radius*radius + length*length)/12}" ixy="0" ixz="0"
+                 iyy="${mass*(3*radius*radius + length*length)/12}" iyz="0"
+                 izz="${mass*radius*radius/2}"/>
+        <xacro:insert_block name="origin"/>
+      </inertial>
+      <visual>
+        <xacro:insert_block name="origin"/>
+        <geometry>
+          <cylinder length="${length}" radius="${radius}"/>
+        </geometry>
+        <material name="${material_name}"/>
+      </visual>
+      <collision>
+        <xacro:insert_block name="origin"/>
+        <geometry>
+          <cylinder length="${length}" radius="${radius}"/>
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+
+  <!-- 简单盒子 link 宏 -->
+  <xacro:macro name="box_link" params="name x y z mass *origin material_name">
+    <link name="${name}">
+      <inertial>
+        <mass value="${mass}"/>
+        <inertia ixx="${mass*(y*y + z*z)/12}" ixy="0" ixz="0"
+                 iyy="${mass*(x*x + z*z)/12}" iyz="0"
+                 izz="${mass*(x*x + y*y)/12}"/>
+        <xacro:insert_block name="origin"/>
+      </inertial>
+      <visual>
+        <xacro:insert_block name="origin"/>
+        <geometry>
+          <box size="${x} ${y} ${z}"/>
+        </geometry>
+        <material name="${material_name}"/>
+      </visual>
+      <collision>
+        <xacro:insert_block name="origin"/>
+        <geometry>
+          <box size="${x} ${y} ${z}"/>
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+
+  <!-- 旋转关节 + transmission 宏（position control） -->
+  <xacro:macro name="revolute_joint_trans" params="parent child joint_name axis_x axis_y axis_z limit_effort limit_velocity limit_position_min limit_position_max">
+    <joint name="${joint_name}" type="revolute">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <parent link="${parent}"/>
+      <child  link="${child}"/>
+      <axis xyz="${axis_x} ${axis_y} ${axis_z}"/>
+      <limit effort="${limit_effort}" velocity="${limit_velocity}" lower="${limit_position_min}" upper="${limit_position_max}"/>
+    </joint>
+
+    <transmission name="trans_${joint_name}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${joint_name}">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>  <!-- 或 PositionJointInterface -->
+      </joint>
+      <actuator name="motor_${joint_name}">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+</robot>

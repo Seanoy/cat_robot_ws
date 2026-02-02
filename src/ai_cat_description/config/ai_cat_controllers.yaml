@@ -1,0 +1,29 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    ai_cat_position_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+ai_cat_position_controller:
+  ros__parameters:
+    joints:
+      - head_pitch_joint
+      - head_yaw_joint
+      - l_front_shoulder
+      - l_front_elbow
+      - r_front_shoulder
+      - r_front_elbow
+      - tail_joint
+
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+
+    allow_partial_joints_goal: true
+    open_loop_control: true
